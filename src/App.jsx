@@ -481,6 +481,9 @@ export default function SantismoHorrorHunt() {
     unlockedAudio: false,
   });
 
+  // Background music (iPhone-safe: starts only after a tap)
+  const bgAudioRef = useRef(null);
+  const [musicOn, setMusicOn] = useState(false);
   const [answerInput, setAnswerInput] = useState("");
   const [shake, setShake] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -522,6 +525,14 @@ export default function SantismoHorrorHunt() {
 
   const onUnlockAudio = () => {
     setSaved((s) => ({ ...s, unlockedAudio: true }));
+
+    // Start background music (iOS requires a user gesture)
+    if (bgAudioRef.current) {
+      bgAudioRef.current.volume = 0.22; // subtle ambience
+      bgAudioRef.current.play().catch(() => {});
+      setMusicOn(true);
+    }
+
     speak("Ho ho ho... welcome, brave soul. Let the hunt begin.", {
       voice,
       pitch: 0.7,
@@ -628,6 +639,7 @@ export default function SantismoHorrorHunt() {
           "radial-gradient(900px 420px at 50% 15%, rgba(220,38,38,0.16), transparent 60%), radial-gradient(600px 360px at 20% 85%, rgba(59,130,246,0.10), transparent 60%)",
       }}
     >
+      <audio ref={bgAudioRef} src="/audio/santismo-ambient.mp3" loop preload="auto" />
       <HauntedMapOverlay
         open={mapOpen}
         onClose={() => setMapOpen(false)}
@@ -745,6 +757,22 @@ export default function SantismoHorrorHunt() {
               title="Have Santismo speak"
             >
               🎙️
+            </button>
+            <button
+              onClick={() => {
+                if (!bgAudioRef.current) return;
+                if (musicOn) {
+                  bgAudioRef.current.pause();
+                  setMusicOn(false);
+                } else {
+                  bgAudioRef.current.play().catch(() => {});
+                  setMusicOn(true);
+                }
+              }}
+              className="rounded-2xl border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-xs hover:bg-zinc-900/50"
+              title="Toggle background music"
+            >
+              {musicOn ? "🔊 Music" : "🔇 Music"}
             </button>
           </div>
 
